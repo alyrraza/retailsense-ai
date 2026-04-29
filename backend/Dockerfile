@@ -12,7 +12,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy app
-COPY backend /app
+# ✅ correct
+COPY . /app
 
 EXPOSE 8000
 
