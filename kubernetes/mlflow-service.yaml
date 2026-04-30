@@ -6,8 +6,9 @@ metadata:
 spec:
   selector:
     app: mlflow
+  type: NodePort
   ports:
     - protocol: TCP
       port: 5000
       targetPort: 5000
-  type: ClusterIP
+      nodePort: 30500

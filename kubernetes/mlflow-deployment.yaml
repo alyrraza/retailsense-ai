@@ -15,13 +15,31 @@ spec:
     spec:
       containers:
         - name: mlflow
-          image: ghcr.io/mlflow/mlflow:latest
-          args: ["server", "--host", "0.0.0.0", "--backend-store-uri", "sqlite:///mlflow.db", "--default-artifact-root", "/mlruns"]
+          image: ghcr.io/mlflow/mlflow:v2.11.3
+          imagePullPolicy: IfNotPresent
+          command: ["mlflow"]
+          args:
+            - "server"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "5000"
+            - "--backend-store-uri"
+            - "sqlite:////mlruns/mlflow.db"
+            - "--default-artifact-root"
+            - "/mlruns/artifacts"
           ports:
             - containerPort: 5000
           volumeMounts:
             - name: mlruns
               mountPath: /mlruns
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "300m"
+              memory: "512Mi"
       volumes:
         - name: mlruns
           emptyDir: {}
