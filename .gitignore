@@ -23,6 +23,10 @@ data/train.csv
 data/test.csv
 data/transactions.csv
 
+# Keep screenshots
+!data/*.jpg
+!data/*.png
+
 # MLflow
 mlruns/
 mlruns.db

@@ -9,10 +9,10 @@ from contextlib import asynccontextmanager
 import uvicorn
 import pandas as pd
 
-from . import model_loader
-from . import drift_monitor
-from .schemas import HealthResponse, MetricsResponse, ModelMetrics
-from .predict import router as predict_router
+import model_loader
+import drift_monitor
+from schemas import HealthResponse, MetricsResponse, ModelMetrics
+from predict import router as predict_router
 
 load_dotenv()
 
@@ -35,7 +35,7 @@ app = FastAPI(title="RetailSense AI - Backend", lifespan=lifespan)
 # CORS for React frontend on localhost:3000
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -10,9 +10,4 @@ shap>=0.41.0
 scipy>=1.9.0
 joblib>=1.2.0
 aiofiles>=23.1.0
-fastapi
-uvicorn
-pandas
-scikit-learn
-joblib
 mlflow

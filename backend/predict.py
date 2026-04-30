@@ -6,9 +6,9 @@ import pandas as pd
 from scipy.stats import ttest_rel
 from pathlib import Path
 
-from . import drift_monitor
+import drift_monitor
 
-from .schemas import (
+from schemas import (
     ForecastRequest,
     ForecastResponse,
     SegmentRequest,
