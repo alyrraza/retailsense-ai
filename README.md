@@ -6,12 +6,16 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.95+-green)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18-61DAFB)](https://react.dev)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)](https://docker.com)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-Minikube-326CE5)](https://kubernetes.io)
 [![MLflow](https://img.shields.io/badge/MLflow-3.11-orange)](https://mlflow.org)
 [![EC2](https://img.shields.io/badge/AWS-EC2-FF9900)](http://16.171.161.243:3000)
 
-**Live Demo:** [http://16.171.161.243:3000](http://16.171.161.243:3000)  
-**MLflow Tracking:** [http://16.171.161.243:5000](http://16.171.161.243:5000)  
-**API Docs:** [http://16.171.161.243:8000/docs](http://16.171.161.243:8000/docs)
+### Live Links
+
+| Deployment | Frontend | Backend API | MLflow UI |
+|------------|----------|-------------|-----------|
+| **Docker Compose** | [http://16.171.161.243:3000](http://16.171.161.243:3000) | [http://16.171.161.243:8000/docs](http://16.171.161.243:8000/docs) | [http://16.171.161.243:5001](http://16.171.161.243:5001) |
+| **Kubernetes** | [http://16.171.161.243:30300](http://16.171.161.243:30300) | [http://16.171.161.243:30800/docs](http://16.171.161.243:30800/docs) | [http://16.171.161.243:30500](http://16.171.161.243:30500) |
 
 ---
 
@@ -85,8 +89,10 @@ Raw Data (CSV)
 │  A/B Test / Drift               │
 └─────────────────────────────────┘
                  │
-                 ▼
-     Docker Compose on AWS EC2
+        ┌────────┴────────┐
+        ▼                 ▼
+  Docker Compose     Kubernetes
+  (AWS EC2)          (Minikube on EC2)
 ```
 
 ---
@@ -104,8 +110,8 @@ Raw Data (CSV)
 | Frontend | React 18 + Recharts + TailwindCSS |
 | Serving | Nginx (reverse proxy + static serving) |
 | Storage | MinIO (S3-compatible), PostgreSQL |
-| Deployment | Docker Compose on AWS EC2 |
-| Orchestration (next) | Kubernetes |
+| Containerization | Docker Compose |
+| Orchestration | Kubernetes (Minikube on AWS EC2) |
 
 ---
 
@@ -131,9 +137,14 @@ LightGBM selected as production model via paired t-test A/B comparison (p=0.0036
 ### Dashboard — Model Comparison
 ![Dashboard](data/Screenshot%202026-04-29%20044820.jpg)
 
-### Forecast — Input & Prediction
-![Forecast Input](data/Screenshot%202026-04-29%20044932.jpg)
+> E2E health check confirms all models loaded and metrics accessible
 
+![E2E Check](data/Screenshot%202026-04-29%20044847.jpg)
+
+### Forecast — Input Form
+![Forecast Input](data/Screenshot%202026-04-29%20044945.jpg)
+
+### Forecast — Prediction Result
 ![Forecast Result](data/Screenshot%202026-04-29%20045007.jpg)
 
 > Prediction: **2486 units** with 95% confidence interval [1827, 3146] using LightGBM
@@ -146,12 +157,27 @@ LightGBM selected as production model via paired t-test A/B comparison (p=0.0036
 
 > T-stat: -3.32 · P-value: 0.0036 · Winner: XGBoost (on this sample)
 
-### MLflow — Experiment Tracking
-![MLflow Runs](data/Screenshot%202026-04-29%20035433.jpg)
+### MLflow — Experiment Home
+![MLflow Home](data/Screenshot%202026-04-29%20221516.jpg)
 
+### MLflow — 21 Training Runs
+![MLflow Runs List](data/Screenshot%202026-04-29%20221545.jpg)
+
+### MLflow — RMSE Comparison Across Runs
+![MLflow RMSE Chart](data/Screenshot%202026-04-29%20035532.jpg)
+
+> Best_Model_Production (LightGBM) at RMSE 336.33 vs ARIMA at 740.72
+
+### MLflow — MAE & MAPE Comparison
+![MLflow MAE Chart](data/Screenshot%202026-04-29%20221646.jpg)
+
+### MLflow — ARIMA Run Detail
+![MLflow ARIMA Run](data/Screenshot%202026-04-29%20221602.jpg)
+
+> ARIMA(5,1,0): RMSE 740.71, MAE 517.14, MAPE 30.58% — confirms tree models vastly outperform the baseline
+
+### MLflow — Best Model Registry
 ![MLflow Best Model](data/Screenshot%202026-04-29%20035455.jpg)
-
-> 21 tracked runs across XGBoost, LightGBM, ARIMA, Segmentation, A/B Test · Best model registered as `RetailSense_Forecaster v3`
 
 ---
 
@@ -174,6 +200,17 @@ retailsense-ai/
 │   │   └── api/api.js     # Axios client (baseURL: /api)
 │   ├── nginx/default.conf # Proxies /api → backend:8000, /mlflow → mlflow:5000
 │   └── Dockerfile
+├── kubernetes/
+│   ├── namespace.yaml
+│   ├── configmap.yaml
+│   ├── frontend-nginx-configmap.yaml  # Overrides nginx upstream for K8s service names
+│   ├── frontend-deployment.yaml
+│   ├── frontend-service.yaml          # NodePort 30300
+│   ├── backend-deployment.yaml
+│   ├── backend-service.yaml           # NodePort 30800
+│   ├── mlflow-deployment.yaml
+│   ├── mlflow-service.yaml            # NodePort 30500
+│   └── ingress.yaml
 ├── models/                # Trained .pkl files (gitignored — transfer via scp)
 │   ├── lgbm_model.pkl
 │   ├── xgboost_model.pkl
@@ -185,7 +222,6 @@ retailsense-ai/
 │   └── features.json
 ├── notebooks/             # Training notebook + MLflow runs
 ├── data/                  # Raw CSVs (train, stores, oil, holidays)
-├── kubernetes/            # K8s manifests (next phase)
 ├── scripts/               # Data loading + SQL feature engineering
 ├── mlflow/                # MLflow Dockerfile
 ├── docker-compose.yml
@@ -219,7 +255,7 @@ docker compose up -d --build
 
 ---
 
-## EC2 Deployment
+## EC2 Deployment (Docker Compose)
 
 ```bash
 # On your local machine — copy models
@@ -235,7 +271,44 @@ docker compose ps
 curl http://localhost:8000/
 ```
 
-**Required EC2 Security Group inbound ports:** 22, 3000, 8000, 5000, 9000
+**Required EC2 Security Group inbound ports:** 22, 3000, 8000, 5001
+
+---
+
+## Kubernetes Deployment (Minikube on EC2)
+
+```bash
+# Prerequisites: Docker, Minikube, kubectl installed on EC2
+
+# 1. Start Minikube with Docker driver
+minikube start --driver=docker --memory=4096 --cpus=2
+
+# 2. Build images inside Minikube's Docker context
+eval $(minikube docker-env)
+docker build -t retailsense-ai-backend:latest ./backend
+docker build -t retailsense-ai-frontend:latest ./frontend
+
+# 3. Apply all manifests
+kubectl apply -f kubernetes/namespace.yaml
+kubectl apply -f kubernetes/configmap.yaml
+kubectl apply -f kubernetes/frontend-nginx-configmap.yaml
+kubectl apply -f kubernetes/backend-deployment.yaml
+kubectl apply -f kubernetes/backend-service.yaml
+kubectl apply -f kubernetes/frontend-deployment.yaml
+kubectl apply -f kubernetes/frontend-service.yaml
+kubectl apply -f kubernetes/mlflow-deployment.yaml
+kubectl apply -f kubernetes/mlflow-service.yaml
+
+# 4. Watch pods come up
+kubectl get pods -n retailsense -w
+
+# 5. Expose NodePorts on the EC2 host (Minikube Docker driver doesn't bind to host)
+kubectl port-forward -n retailsense service/frontend-service 30300:80 --address 0.0.0.0 &
+kubectl port-forward -n retailsense service/backend-service 30800:8000 --address 0.0.0.0 &
+kubectl port-forward -n retailsense service/mlflow-service 30500:5000 --address 0.0.0.0 &
+```
+
+**Required EC2 Security Group inbound ports:** 22, 30300, 30800, 30500
 
 ---
 
